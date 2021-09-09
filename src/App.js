@@ -1,25 +1,67 @@
-import logo from './logo.svg';
+import React, {Component} from 'react';
 import './App.css';
+import { CardList } from './components/card-list/card-list.component';
+import { SearchBox } from './components/search-box/search-box.component';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+class App extends Component {
+  constructor() {
+    super();
+
+    this.state = {
+      players: [],
+      team: [],
+      searchField: ''
+    };
+  }
+
+  getSquads = async () => {
+    try {
+      const squadResponse = await fetch('https://api-football-v1.p.rapidapi.com/v3/players/squads?team=71', {
+        headers: {
+          'x-rapidapi-key': 'abd4e5ec3bmshc89644225bb0a91p1ca429jsn3d224bc0d117',
+          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
+        },
+      });
+      const squadJson = await squadResponse.json();
+      this.setState({
+        players: squadJson.response[0].players,
+        team: squadJson.response[0].team
+      });
+    } catch (err) {
+      console.log('The error ' + err + ' was thrown.')
+    }
+  }
+
+  componentDidMount() {
+    this.getSquads()
+  }
+
+  render() {
+    const { players, team, searchField } = this.state;
+    const filteredPlayers = players.filter(player =>
+      player.name.toLowerCase().includes(searchField.toLowerCase())
+    )
+    return (
+      <div className="App">
+        <h1>{team.name}</h1>
+        <p><img src={team.logo} alt='logo'/></p>
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          {/* <input
+          type='search'
+          placeholder='Filter players'
+          onChange={e => this.setState({ searchField: e.target.value })}
+          /> */}
+          <SearchBox
+            placeholder='Filter players'
+            handleChange={e => this.setState({ searchField: e.target.value })}
+          />
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+        <CardList
+          players={filteredPlayers}
+        />
+        </div>
+    )
+  }
 }
 
 export default App;
